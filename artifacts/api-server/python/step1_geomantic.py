@@ -24,6 +24,7 @@ DYNAMIC HOME / AWAY LOGIC:
       3. All 30 Teams Home Baseline (HOME_TEAM = "ALL" or blank):
          Produces 30 rows where each team is evaluated in its own home arena.
 """
+import os
 import re
 import sys
 import traceback

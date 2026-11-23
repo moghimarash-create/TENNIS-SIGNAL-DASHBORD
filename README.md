@@ -1,33 +1,58 @@
 # TENNIS-SIGNAL-DASHBORD
 
-**موتور پایه نجومی-جمتریا تورنمنت / شهر / کورت مسابقه تنیس (بدون تاریخ تولد)**  
-*(Cloned cleanly from `NBA-SIGNAL-DASHBORD.zip` — 100% isolated from all `NBA-*` and `NHL-*` repositories, sheets, and state files)*
+**موتور پایه نجومی-جمتریا تنیس (ATP & WTA) — ۱۰۰٪ مبتنی بر جمتریا نام‌ها (`EnglishGem`) و آسمان روز و مکان تورنمنت (`pyswisseph`)**
+
+> **قانون معماری قطعی:**  
+> این سیستم ۱۰۰٪ **نجومی-جمتریا (Astro-Gematria)** است و **هیچ استفاده‌ای از تاریخ تولد بازیکنان نمی‌کند (`BIRTHDATE_USED = False`)**. همچنین به صورت ۱۰۰٪ ایزوله از مخازن و شیت‌های زنده `NBA-*` و `NHL-*` اجرا می‌شود.
 
 ---
 
-## قوانین قطعی معماری نجومی-جمتریا (Astro-Gematria Architecture)
+## ۱. جدول جمتریا استاندارد (`EnglishGem`) و درجات پایه (`DEG1`)
 
-1. **مطلقاً بدون تاریخ تولد بازیکنان (`BIRTHDATE_USED = False`):**  
-   تمامی محاسبات بازیکن و تورنمنت منحصراً بر پایه **جمتریا انگلیسی نام‌ها (`EGEM_MAP`: نام بازیکن / نام تورنمنت، شهر و کورت)** + **موقعیت سیارات در لحظه و مختصات مسابقه (`pyswisseph`)** + **درجه پایه ثابت تور (`DEG1`)** انجام می‌شود.
+| حروف | مقدار | حروف | مقدار |
+| :--- | :---: | :--- | :---: |
+| `A` | `1` | `L` | `30` |
+| `B` | `2` | `M` | `40` |
+| `G` | `3` | `N` | `50` |
+| `D` | `4` | `S` | `60` |
+| `E` | `5` | `O, X` | `70` |
+| `U, V, W` | `6` | `F, P` | `80` |
+| `Z` | `7` | `Q` | `100` |
+| `H` | `8` | `R` | `200` |
+| `I, J, Y` | `10` | `T` | `400` |
+| `C, K` | `20` | سایر کاراکترها | `0` |
 
-2. **پروفایل‌های ثابت نجومی-جمتریا تنیس (`ATP` و `WTA`):**
-   | تور (Tour) | جمتریا پایه (`egem`) | محاسبه درجه پایه | `DEG1` ثابت | موقعیت زودیاک | عنصر (Element) | تیکر Kalshi |
-   | :--- | :---: | :---: | :---: | :---: | :---: | :---: |
-   | **ATP (مردان)** | `481` (`A=1 + T=400 + P=80`) | `481 - 360 = 121` | **`121`** | **`1° LEO`** (برج شیر / خانه ۴ از ۰) | **`FIRE`** | `KXATPMATCH` |
-   | **WTA (زنان)** | `407` (`W=6 + T=400 + A=1`) | `407 - 360 = 47` | **`47`** | **`17° TAURUS`** (برج ثور / خانه ۱ از ۰) | **`EARTH`** | `KXWTAMATCH` |
-
-3. **ایزولاسیون ۱۰۰٪ از شیت‌ها و سرویس‌های زنده NBA و NHL:**
-   - متغیر `TENNIS_SHEETS_WRITE_ENABLED` به صورت پیش‌فرض `false` / `0` است.
-   - هرگونه دسترسی یا نوشتن خودکار روی شیت‌های زنده `NBA-PLAYERS-GEOMANTIC-INPUT`، `NBA-FUSION-CALCULATION` و سایر شیت‌های NBA/NHL در لایه `_lib/sheets.py` مسدود شده است.
-   - فایل وضعیت صرافی کالشی به `kalshi_tennis_state.json` ایزوله شده و در `.gitignore` قرار دارد.
+- **ATP (تور مردان):** `EnglishGem("ATP") = 481` ➔ `481 mod 360 = 121` ➔ **`DEG1 = 121` (`1° LEO` • عنصر `FIRE`)**
+- **WTA (تور زنان):** `EnglishGem("WTA") = 407` ➔ `407 mod 360 = 47` ➔ **`DEG1 = 47` (`17° TAURUS` • عنصر `EARTH`)**
 
 ---
 
-## فایل‌های کلیدی کانفیگ تنیس (گام اول)
+## ۲. سه آپشن قابل انتخاب `DEG3` در زاویه اول (`T`) + زاویه دوم (`P`)
 
-- [`tennis_config.py`](./artifacts/api-server/python/_lib/tennis_config.py) — ثابت‌های نجومی-جمتریا پایتون (`ATP_DEG1=121`, `WTA_DEG1=47`, `BIRTHDATE_USED=False`) و گارد ایزولاسیون شیت‌ها
-- [`sheets.py`](./artifacts/api-server/python/_lib/sheets.py) — محافظ سخت‌افزاری عدم اتصال/نوشتن روی شیت‌های NBA و NHL
-- [`tennis-config.ts`](./artifacts/api-server/src/lib/tennis-config.ts) — پروفایل‌های تایپ‌اسکریپت `ATP` و `WTA` و تیکرهای `KXATPMATCH` / `KXWTAMATCH`
-- [`steps-config.ts`](./artifacts/api-server/src/lib/steps-config.ts) — تعریف گام‌های ایزوله پایپ‌لاین محاسباتی تنیس
-- [`preset.ts`](./artifacts/api-server/src/routes/preset.ts) — سرویس API و دریافت بازارهای زنده `KXATPMATCH` و `KXWTAMATCH` از Kalshi
-- [`App.tsx`](./artifacts/calc-dashboard/src/App.tsx) — رابط کاربری تمیز و سوییچر پروفایل `ATP (121 • 1° LEO)` / `WTA (47 • 17° TAURUS)`
+- **`DEG2` (زاویه اول `T`):** `MOD(EnglishGem(Player_Full_Name), 360)`
+- **سه آپشن `DEG3` در زاویه اول (`T`):**
+  1. **`opt1` (`CITY_PLUS_TOURNAMENT`):** `MOD(EnglishGem(City), 360) + MOD(EnglishGem(Tournament), 360)`
+  2. **`opt2` (`TOURNAMENT_ONLY`):** `MOD(EnglishGem(Tournament), 360)`
+  3. **`opt3` (`CITY_ONLY` — پیش‌فرض برنده بنچمارک):** `MOD(EnglishGem(City), 360)`
+- **زاویه دوم (`P` — تطابق فردی کورت و کد بازیکن):**
+  - `DEG2 = MOD(EnglishGem(Player_Last_Name), 360)`
+  - `DEG3 = MOD(EnglishGem(Surface), 360) + MOD(EnglishGem(Player_IOC_Code), 360)`
+
+---
+
+## ۳. خلاصه بنچمارک Zero-Lookahead سه فصل (`2024–2026` • `16,551` مسابقه انفرادی تور اصلی)
+
+| آپشن زاویه | فرمول `DEG3` | دقت کل `F1` (`ATP+WTA`) | دقت قفل `VIP` (`ATP+WTA`) |
+| :--- | :--- | :---: | :---: |
+| **`opt3` (`CITY_ONLY` — پیش‌فرض)** | `MOD(EnglishGem(City), 360)` | **`61.16%`** (`1573/2572`) | **`66.42%`** (`1086/1635`) |
+| **`opt1` (`CITY_PLUS_TOURNAMENT`)** | `MOD(EnglishGem(City), 360) + MOD(EnglishGem(Tournament), 360)` | `60.37%` (`1633/2705`) | `66.21%` (`1148/1734`) |
+| **`opt2` (`TOURNAMENT_ONLY`)** | `MOD(EnglishGem(Tournament), 360)` | `60.33%` (`1592/2639`) | `66.03%` (`1098/1663`) |
+| **زاویه دوم `P` (`SURFACE_IOC`)** | `MOD(EnglishGem(Surface), 360) + MOD(EnglishGem(IOC), 360)` | **`61.94%`** (`1644/2654`) | — |
+
+---
+
+## ۴. تست تطابق خودکار Python ↔ TypeScript
+
+```bash
+python3 artifacts/api-server/python/test_english_gem_parity.py
+```

@@ -632,7 +632,13 @@ function buildKalshiNbaTicker(
   return `${series}-${yy}${mmm}${dd}${aCode}${hCode}-${wCode}`;
 }
 
-export default function NbaDashboardTab({ tour = "ATP" }: { tour?: "ATP" | "WTA" } = {}) {
+export default function NbaDashboardTab({
+  tour = "ATP",
+  deg3Opt = "opt3",
+}: {
+  tour?: "ATP" | "WTA" | "ALL";
+  deg3Opt?: "opt1" | "opt2" | "opt3";
+} = {}) {
   const [games, setGames] = useState<NbaGamePred[]>([]);
   const [histGames, setHistGames] = useState<HistGameRow[]>([]);
   const [histLoading, setHistLoading] = useState(true);
@@ -741,12 +747,21 @@ export default function NbaDashboardTab({ tour = "ATP" }: { tour?: "ATP" | "WTA"
 
   useEffect(() => {
     let cancelled = false;
-    fetch("/nba_predictions_2580.json")
-      .catch(() => fetch("/api/preset/nba-predictions"))
-      .then((r) => (r.ok ? r.json() : Promise.reject(new Error(`HTTP ${r.status}`))))
-      .then((d: { games?: NbaGamePred[] }) => {
-        if (!cancelled && d?.games) {
-          setGames(d.games);
+    setLoading(true);
+    setHistLoading(true);
+    const predUrls =
+      tour === "ALL"
+        ? [`/tennis_dashbord_atp_${deg3Opt}.json`, `/tennis_dashbord_wta_${deg3Opt}.json`]
+        : [`/tennis_dashbord_${tour.toLowerCase()}_${deg3Opt}.json`];
+    Promise.all(predUrls.map((u) => fetch(u).then((r) => (r.ok ? r.json() : { games: [] }))))
+      .then((docs: { games?: NbaGamePred[] }[]) => {
+        if (!cancelled) {
+          const merged = docs.flatMap((d) => d?.games ?? []);
+          merged.sort((a, b) => (a.d < b.d ? -1 : a.d > b.d ? 1 : a.n - b.n));
+          setGames(merged);
+          if (merged.length > 0) {
+            setDailyCardDate(merged[merged.length - 1].d);
+          }
         }
       })
       .catch(() => {})
@@ -754,9 +769,13 @@ export default function NbaDashboardTab({ tour = "ATP" }: { tour?: "ATP" | "WTA"
         if (!cancelled) setLoading(false);
       });
 
-    fetch("/nba_history_pack_2010_2026.json")
-      .then((r) => (r.ok ? r.json() : Promise.reject(new Error(`HTTP ${r.status}`))))
-      .then((rawRows: any[]) => {
+    const histUrls =
+      tour === "ALL"
+        ? [`/tennis_hist_atp_${deg3Opt}.json`, `/tennis_hist_wta_${deg3Opt}.json`]
+        : [`/tennis_hist_${tour.toLowerCase()}_${deg3Opt}.json`];
+    Promise.all(histUrls.map((u) => fetch(u).then((r) => (r.ok ? r.json() : []))))
+      .then((arrList: any[][]) => {
+        const rawRows = arrList.flat();
         if (!cancelled && Array.isArray(rawRows)) {
           const parsed: HistGameRow[] = rawRows.map((arr) => {
             const h12 = Array.isArray(arr[8]) ? arr[8].map(String) : [];
@@ -831,7 +850,7 @@ export default function NbaDashboardTab({ tour = "ATP" }: { tour?: "ATP" | "WTA"
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [tour, deg3Opt]);
 
   const matchTwin = useCallback((g: NbaGamePred, p: TwinPatternKey) => {
     if (p === "twVipIdx3") return Boolean(oddsFreqMode === "daily" ? (g.vip_idx3_day ?? g.vip_idx3) : g.vip_idx3);
@@ -898,12 +917,17 @@ export default function NbaDashboardTab({ tour = "ATP" }: { tour?: "ATP" | "WTA"
       const d = await r.json();
       if (d?.ok) {
         const ts = Date.now();
-        const rp = await fetch(`/nba_predictions_2580.json?t=${ts}`).catch(() =>
-          fetch("/api/preset/nba-predictions")
+        const syncUrls =
+          tour === "ALL"
+            ? [`/tennis_dashbord_atp_${deg3Opt}.json?t=${ts}`, `/tennis_dashbord_wta_${deg3Opt}.json?t=${ts}`]
+            : [`/tennis_dashbord_${tour.toLowerCase()}_${deg3Opt}.json?t=${ts}`];
+        const docs = await Promise.all(
+          syncUrls.map((u) => fetch(u, { cache: "no-store" }).then((r) => (r.ok ? r.json() : { games: [] })))
         );
-        if (rp.ok) {
-          const dp = await rp.json();
-          if (dp?.games) setGames(dp.games);
+        const merged = docs.flatMap((doc: any) => doc?.games ?? []);
+        if (merged.length > 0) {
+          merged.sort((a: any, b: any) => (a.d < b.d ? -1 : a.d > b.d ? 1 : a.n - b.n));
+          setGames(merged);
         }
         if ((d.updatedScores ?? 0) > 0) {
           const rh = await fetch(`/nba_history_pack_2010_2026.json?t=${ts}`);
@@ -971,7 +995,7 @@ export default function NbaDashboardTab({ tour = "ATP" }: { tour?: "ATP" | "WTA"
   const patternWins = patternCompleted.filter((g) => getGameStatus(g) === "WIN").length;
   const patternAcc = patternCompleted.length > 0 ? ((100 * patternWins) / patternCompleted.length).toFixed(2) : "0.00";
 
-  const seasons = ["2024-25", "2025-26", "2026-27"];
+  const seasons = ["2024", "2025", "2026"];
   const seasonStats = seasons.map((s) => {
     const sub = patternCompleted.filter((g) => g.s === s);
     const w = sub.filter((g) => getGameStatus(g) === "WIN").length;
@@ -1102,8 +1126,8 @@ export default function NbaDashboardTab({ tour = "ATP" }: { tour?: "ATP" | "WTA"
     engineMode === "manual" || engineMode === "twins"
       ? TWIN_PATTERN_DEFS.find((d) => d.key === twinPattern) ?? TWIN_PATTERN_DEFS[0]
       : engineMode === "fusion"
-        ? FUSION_PATTERN_DEFS.find((d) => d.key === fusionPattern) ?? FUSION_PATTERN_DEFS[0]
-        : SINGLE_PATTERN_DEFS.find((d) => d.key === singlePattern) ?? SINGLE_PATTERN_DEFS[0];
+        ? FUSION_PATTERN_DEFS.find((d: any) => d.key === fusionPattern) ?? FUSION_PATTERN_DEFS[0]
+        : SINGLE_PATTERN_DEFS.find((d: any) => d.key === singlePattern) ?? SINGLE_PATTERN_DEFS[0];
 
   return (
     <Card className="border-sky-200 bg-sky-50/40 shadow-sm mb-6" data-testid="card-nba-new-system">
@@ -3623,7 +3647,7 @@ export default function NbaDashboardTab({ tour = "ATP" }: { tour?: "ATP" | "WTA"
           </div>
         ) : engineMode === "fusion" ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-7 gap-2">
-            {FUSION_PATTERN_DEFS.map((p) => {
+            {FUSION_PATTERN_DEFS.map((p: any) => {
               const sub = games.filter((g) => matchFusion(g, p.key) && Boolean(g.done));
               const w = sub.filter((g) => (((g.f30 ?? 0) >= 0 ? g.h : g.a) === g.aw)).length;
               const pct = sub.length > 0 ? ((100 * w) / sub.length).toFixed(2) : "0.00";
@@ -3661,7 +3685,7 @@ export default function NbaDashboardTab({ tour = "ATP" }: { tour?: "ATP" | "WTA"
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-2.5">
-            {SINGLE_PATTERN_DEFS.map((p) => {
+            {SINGLE_PATTERN_DEFS.map((p: any) => {
               const sub = games.filter((g) => matchSingle(g, p.key) && Boolean(g.done));
               const w = sub.filter((g) => (p.key === "s1_guard" ? g.a === g.aw : p.key === "all" ? g.st === "WIN" : g.h === g.aw)).length;
               const pct = sub.length > 0 ? ((100 * w) / sub.length).toFixed(2) : "0.00";
@@ -3885,9 +3909,9 @@ export default function NbaDashboardTab({ tour = "ATP" }: { tour?: "ATP" | "WTA"
                 className="h-9 rounded-md border border-slate-300 bg-white px-2.5 text-xs font-mono"
               >
                 <option value="ALL">All Seasons (همه فصل‌ها)</option>
-                <option value="2024-25">2024-25 (Oct 2024–Jun 2025)</option>
-                <option value="2025-26">2025-26 (Oct 2025–Jun 2026)</option>
-                <option value="2026-27">2026-27 (Sep 2026–Apr 2027)</option>
+                <option value="2024">فصل ۲۰۲۴ (ATP / WTA 2024)</option>
+                <option value="2025">فصل ۲۰۲۵ (ATP / WTA 2025)</option>
+                <option value="2026">فصل ۲۰۲۶ (ATP / WTA 2026)</option>
               </select>
             </div>
 

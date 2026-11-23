@@ -511,10 +511,7 @@ async function executeKalshiPlanOrders(
 ): Promise<{ ok: boolean; mode: string; results: any[]; summary: any; error?: string }> {
   const st = await readKalshiState();
   const enabledOrders = orders.filter((o) => o.enabled);
-  const needsNhl = enabledOrders.some((o) => String(o.ticker ?? "").startsWith("KXNHLGAME-"));
-  const nbaMarkets = await fetchOpenKalshiNbaMarkets(true);
-  const nhlMarkets = needsNhl ? await fetchOpenKalshiNhlMarkets(true) : {};
-  const liveMarkets: Record<string, any> = { ...nbaMarkets, ...nhlMarkets };
+  const liveMarkets: Record<string, any> = await fetchOpenKalshiNbaMarkets(true);
 
   if (mode === "live" && (!st.keyId || !st.privateKeyPem)) {
     return {
