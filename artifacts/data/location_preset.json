@@ -1,0 +1,12 @@
+{
+  "presetId": "tennis-auto-tournament-venue",
+  "label": "Tennis Auto \u2014 Tournament City & Court Coordinates + Match Sky (ATP DEG1=121 / WTA DEG1=47)",
+  "tour": "ATP",
+  "atpDeg1": 121,
+  "wtaDeg1": 47,
+  "birthdateUsed": false,
+  "tz": "AUTO",
+  "appliedAt": null,
+  "rowsWritten": 0,
+  "message": "Initialized Step 1 Tennis Astro-Gematria skeleton (isolated from NBA & NHL sheets)"
+}

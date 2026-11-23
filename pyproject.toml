@@ -1,0 +1,11 @@
+[project]
+name = "repl-nix-workspace"
+version = "0.1.0"
+description = "Add your description here"
+requires-python = ">=3.11"
+dependencies = [
+    "google-auth>=2.50.0",
+    "gspread>=6.2.1",
+    "pyswisseph>=2.10.3.2",
+    "requests>=2.33.1",
+]

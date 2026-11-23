@@ -1,0 +1,245 @@
+openapi: 3.1.0
+info:
+  # Do not change the title, if the title changes, the import paths will be broken
+  title: Api
+  version: 0.1.0
+  description: API specification
+servers:
+  - url: /api
+    description: Base API path
+tags:
+  - name: health
+    description: Health operations
+  - name: steps
+    description: Calculation pipeline step orchestration
+paths:
+  /healthz:
+    get:
+      operationId: healthCheck
+      tags: [health]
+      summary: Health check
+      description: Returns server health status
+      responses:
+        "200":
+          description: Healthy
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HealthStatus"
+  /steps:
+    get:
+      operationId: listSteps
+      tags: [steps]
+      summary: List all pipeline steps with last-run status
+      responses:
+        "200":
+          description: List of steps
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Step"
+  /steps/{id}/run:
+    post:
+      operationId: runStep
+      tags: [steps]
+      summary: Run a single pipeline step
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 6
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RunStepOptions"
+      responses:
+        "200":
+          description: Step run completed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StepRunResult"
+        "400":
+          description: Invalid step id
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "409":
+          description: Step is already running
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /steps/run-all:
+    post:
+      operationId: runAllSteps
+      tags: [steps]
+      summary: Run all 6 steps sequentially, stopping on first error
+      responses:
+        "200":
+          description: Pipeline run completed (success or stopped on error)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PipelineRunResult"
+        "409":
+          description: Pipeline or a step is already running
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /steps/{id}/logs:
+    get:
+      operationId: getStepLogs
+      tags: [steps]
+      summary: Get the most recent logs for a step
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 6
+      responses:
+        "200":
+          description: Step logs
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StepLogs"
+        "400":
+          description: Invalid step id
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+components:
+  schemas:
+    HealthStatus:
+      type: object
+      properties:
+        status:
+          type: string
+      required:
+        - status
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+      required:
+        - error
+    SheetLink:
+      type: object
+      properties:
+        label:
+          type: string
+        spreadsheetId:
+          type: string
+        tab:
+          type: string
+        url:
+          type: string
+        market:
+          type: string
+          description: >-
+            Market code (e.g. BTC, DJIA) when this input maps to a
+            DATA-SEARCH-KEY KEY-MATCH-* tab. Used by the dashboard to render
+            per-market enable/disable checkboxes for Step 4.
+      required: [label, spreadsheetId, url]
+    RunStepOptions:
+      type: object
+      properties:
+        disabledMarkets:
+          type: array
+          items:
+            type: string
+          description: >-
+            Optional list of market codes to EXCLUDE from Step 4 (Search
+            Signals) — the markets the user unchecked on the dashboard. When
+            omitted or empty, all visible KEY-MATCH-* markets run (dynamic
+            discovery is preserved). When provided, the active set is the
+            visible markets minus this list, so unknown/new visible tabs still
+            run even while the user filters known markets.
+    StepStatus:
+      type: string
+      enum: [idle, running, success, error]
+    LastRun:
+      type: object
+      properties:
+        status:
+          $ref: "#/components/schemas/StepStatus"
+        finishedAt:
+          type: ["string", "null"]
+        durationMs:
+          type: ["integer", "null"]
+        rowsWritten:
+          type: ["integer", "null"]
+        message:
+          type: ["string", "null"]
+        error:
+          type: ["string", "null"]
+      required: [status]
+    Step:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        description:
+          type: string
+        runtime:
+          type: string
+        implemented:
+          type: boolean
+        inputs:
+          type: array
+          items:
+            $ref: "#/components/schemas/SheetLink"
+        outputs:
+          type: array
+          items:
+            $ref: "#/components/schemas/SheetLink"
+        lastRun:
+          $ref: "#/components/schemas/LastRun"
+      required: [id, name, description, runtime, implemented, inputs, outputs, lastRun]
+    StepRunResult:
+      type: object
+      properties:
+        step:
+          $ref: "#/components/schemas/Step"
+        ok:
+          type: boolean
+      required: [step, ok]
+    PipelineRunResult:
+      type: object
+      properties:
+        ok:
+          type: boolean
+        results:
+          type: array
+          items:
+            $ref: "#/components/schemas/StepRunResult"
+        stoppedAtStep:
+          type: ["integer", "null"]
+      required: [ok, results]
+    StepLogs:
+      type: object
+      properties:
+        stepId:
+          type: integer
+        lines:
+          type: array
+          items:
+            type: string
+      required: [stepId, lines]

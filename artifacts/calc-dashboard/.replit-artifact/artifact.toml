@@ -1,0 +1,31 @@
+kind = "web"
+previewPath = "/"
+title = "Calculation Steps Dashboard"
+version = "1.0.0"
+id = "artifacts/calc-dashboard"
+router = "path"
+
+[[integratedSkills]]
+name = "react-vite"
+version = "1.0.0"
+
+[[services]]
+name = "web"
+paths = [ "/" ]
+localPort = 24905
+
+[services.development]
+run = "pnpm --filter @workspace/calc-dashboard run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/calc-dashboard", "run", "build" ]
+publicDir = "artifacts/calc-dashboard/dist/public"
+serve = "static"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "24905"
+BASE_PATH = "/"

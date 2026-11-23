@@ -1,0 +1,13 @@
+{
+  "tour": "ATP",
+  "startDate": "2026-11-22",
+  "endDate": "2026-11-29",
+  "utcControl": false,
+  "deg1": 121,
+  "wtaDeg1": 47,
+  "birthdateUsed": false,
+  "appliedAt": null,
+  "rowsWritten": 0,
+  "message": "Ready for Step 2 ATP (DEG1=121, 1\u00b0 LEO) & WTA (DEG1=47, 17\u00b0 TAURUS) schedule injection",
+  "games": []
+}

@@ -1,0 +1,25 @@
+{
+  "architecture": "ASTRO_GEMATRIA_NAME_AND_MATCH_SKY",
+  "birthdateUsed": false,
+  "tours": {
+    "ATP": {
+      "gematria": 481,
+      "deg1": 121,
+      "zodiac": "1\u00b0 LEO",
+      "element": "FIRE",
+      "kalshiSeries": "KXATPMATCH"
+    },
+    "WTA": {
+      "gematria": 407,
+      "deg1": 47,
+      "zodiac": "17\u00b0 TAURUS",
+      "element": "EARTH",
+      "kalshiSeries": "KXWTAMATCH"
+    }
+  },
+  "sheetsIsolation": {
+    "autoWriteEnabled": false,
+    "nbaSheetsIsolated": true
+  },
+  "steps": {}
+}

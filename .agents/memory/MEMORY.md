@@ -1,0 +1,2 @@
+- [Calc-sheets verification gotchas](calc-sheets-verification.md) — diff Step 4 sheet outputs by parsed-value row fingerprint (not raw strings); USER_ENTERED reformats; DAY is part of base key.
+- [Geomancy figure table](geomancy-figure-table.md) — GEOMANCY_FIGURES is standard now (fire→earth parity); names are display/scoring only (never affect matching); keep "Conjunctio" spelling; GEO_SIGNAL_MAP was tuned on old labels.
